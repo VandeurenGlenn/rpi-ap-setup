@@ -16,7 +16,9 @@ export default class RpiWifi {
 
     utils.online().then(isOnline => {
       if (isOnline) {
-        console.log(isOnline);
+        if (global.debug) {
+          console.log(isOnline);
+        }
       } else {
 
       }

@@ -24,5 +24,8 @@
   "devDependencies": {
     "del": "^2.2.2",
     "gulp": "gulpjs/gulp#4.0"
+  },
+  "dependencies": {
+    "chalk": "^1.1.3"
   }
 }

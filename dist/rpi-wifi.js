@@ -2,16 +2,35 @@ var config = {
   "debug": true
 };
 
-const spawn = require('child_process').spawn;
-var Utils = class {
-  constructor() {
-
+const chalk = require('chalk');
+var Logger = class {
+  _chalk(text, color='white') {
+    return chalk[color](text);
   }
+
+  log(text) {
+    console.log(this._chalk(text));
+  }
+
+  warn(text) {
+    console.warn(this._chalk(text, 'yellow'));
+  }
+
+  error(text) {
+    console.error(this._chalk(text, 'red'));
+  }
+
+};
+
+const spawn = require('child_process').spawn;
+const logger = new Logger();
+
+var Utils = class {
 
   online() {
     return new Promise((resolve, reject) => {
       const ping = spawn('ping', ['google.com']);
-      
+
       ping.on('close', (code) => {
         if (code === 0) {
           resolve(true);
@@ -19,7 +38,7 @@ var Utils = class {
           resolve(false);
         }
         if (global.debug) {
-          console.log(`child process exited with code ${code}`);
+          logger.warn(`child process exited with code ${code}`);
         }
       });
     });
