@@ -1,7 +1,105 @@
 'use strict';
-import config from './sources/config.json';
-import Utils from './utils';
-import Logger from './logger.js';
+
+var config = {
+  "debug": false,
+  "yesForAll": false,
+  "settings": {
+    "dns": "8.8.8.8 8.8.4.4",
+    "router": "100",
+    "ssid": "RF-001",
+    "pwd": "LoveCook692"
+  }
+};
+
+const chalk = require('chalk');
+var Logger = class {
+  _chalk(text, color='white') {
+    return chalk[color](text);
+  }
+
+  log(text) {
+    console.log(this._chalk(text));
+  }
+
+  warn(text) {
+    console.warn(this._chalk(text, 'yellow'));
+  }
+
+  error(text) {
+    console.error(this._chalk(text, 'red'));
+  }
+
+};
+
+const spawn = require('child_process').spawn;
+const logger$1 = new Logger();
+const inquirer = require('inquirer');
+const logUpdate = require('log-update');
+
+
+var Utils = class {
+
+  spawn(command, args) {
+    return spawn(command, args);
+  }
+
+  cp(path, destination) {
+    const cp = spawn('cp', [path, destination]);
+
+    cp.stderr.on('data', data => {
+      if (config.debug) {
+        logger$1.warn(data.toString());
+      }
+    });
+  }
+
+  backup(paths) {
+    for (let path of paths) {
+      this.logUpdate('backing up');
+      this.cp(path, `${path}.backup`);
+    }
+  }
+
+  prompt(questions) {
+    return new Promise((resolve, reject) => {
+      inquirer.prompt(questions).then(answers => {
+        resolve(answers);
+      }).catch(error => {
+        reject(error);
+      });
+    });
+  }
+
+  logUpdate(message) {
+    logUpdate(logger$1._chalk(message, 'cyan'));
+  }
+
+  online() {
+    return new Promise((resolve, reject) => {
+      const ping = spawn('ping', ['google.com']);
+
+      ping.stdout.on('data', data => {
+        ping.kill();
+      });
+
+      ping.stderr.on('data', data => {
+        ping.kill();
+      });
+
+      ping.on('close', (code) => {
+        if (code === 0 || code === null) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+        if (global.debug) {
+          logger$1.warn(`child process exited with code ${code}`);
+        }
+      });
+    });
+  }
+};
+
 const {stat, readFile, writeFile, unlink} = require('fs');
 let utils = new Utils();
 let logger = new Logger();
@@ -41,7 +139,7 @@ let logger = new Logger();
         install.on('close', (code) => {
           if (code !== 0) {
             logger.error('error installing apt-get packages');
-            reject()
+            reject();
           }
           resolve();
           install.stdin.end();
@@ -51,7 +149,7 @@ let logger = new Logger();
 
     promiseTemplates(opts={defaultDNS: true, router: 100, dns: '8.8.8.8 8.8.4.4'}) {
       return new Promise((resolve, reject) => {
-        utils.logUpdate('Setting up templates');
+        utils.logUpdate('Seting up templates');
 
         this.templates = [];
 
@@ -154,7 +252,7 @@ let logger = new Logger();
         utils.logUpdate('Configuring interfaces');
         const transforms = [
           this.transformFile('/etc/network/interfaces', this.templates['interfaces'])
-        ]
+        ];
         Promise.all(transforms).then(() => {
           resolve();
         });
@@ -168,7 +266,7 @@ let logger = new Logger();
         const transforms = [
           this.transformFile('/etc/default/hostapd', this.templates['hostapd']),
           this.transformFile('/etc/hostapd/hostapd.conf', this.templates['hostapd.conf'])
-        ]
+        ];
         Promise.all(transforms).then(() => {
           resolve();
         });
@@ -181,7 +279,7 @@ let logger = new Logger();
         const transforms = [
           this.transformFile('/etc/sysctl.conf', this.templates['sysctl.conf']),
           this.transformFile('/etc/iptables.ipv4.nat', this.templates['iptables.ipv4.nat'])
-        ]
+        ];
         Promise.all(transforms).then(() => {
           resolve();
         });
@@ -209,7 +307,7 @@ let logger = new Logger();
             for (let arg of Object.keys(args)) {
               if (content.includes(`<%= ${arg} %>`)) {
                 let reg = new RegExp('<%= ' + arg + ' %>', ['g']);
-                content = content.replace(reg, args[arg])
+                content = content.replace(reg, args[arg]);
                 this.templates[name] = content;
               }
             }
@@ -255,3 +353,4 @@ let logger = new Logger();
   }
   return new RpiAPSetup();
 })();
+//# sourceMappingURL=index.js.map

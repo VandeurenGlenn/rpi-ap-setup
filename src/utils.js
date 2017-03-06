@@ -2,23 +2,42 @@
 const spawn = require('child_process').spawn;
 import Logger from './logger.js';
 const logger = new Logger();
+const inquirer = require('inquirer');
+const logUpdate = require('log-update');
+
 
 export default class {
 
-  online() {
-    return new Promise((resolve, reject) => {
-      const ping = spawn('ping', ['google.com']);
+  spawn(command, args) {
+    return spawn(command, args);
+  }
 
-      ping.on('close', (code) => {
-        if (code === 0) {
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-        if (global.debug) {
-          logger.warn(`child process exited with code ${code}`);
-        }
+  cp(path, destination) {
+    const cp = spawn('cp', [path, destination]);
+
+    cp.stderr.on('data', data => {
+      logger.warn(data.toString());
+    });
+  }
+
+  backup(paths) {
+    for (let path of paths) {
+      this.logUpdate('backing up');
+      this.cp(path, `${path}.backup`);
+    }
+  }
+
+  prompt(questions) {
+    return new Promise((resolve, reject) => {
+      inquirer.prompt(questions).then(answers => {
+        resolve(answers)
+      }).catch(error => {
+        reject(error);
       });
     });
+  }
+
+  logUpdate(message) {
+    logUpdate(logger._chalk(message, 'cyan'));
   }
 }

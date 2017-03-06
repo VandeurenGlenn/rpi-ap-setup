@@ -1,31 +1,37 @@
 {
-  "name": "rpi-wifi",
+  "name": "rpi-ap-setup",
   "version": "0.0.1",
   "description": "",
-  "main": "dist/rpi-wifi.js",
+  "main": "dist/index.js",
   "scripts": {
-    "install": "node dist/install.js",
+    "prepublish": "backed -b",
+    "serve": "sudo node dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/reeflight/rpi-wifi.git"
+    "url": "git+https://github.com/vandeurenglenn/rpi-ap-setup.git"
   },
   "keywords": [
-    "reeflight",
+    "rpi",
+    "rpi-ap",
+    "access",
+    "point",
+    "access-point",
+    "rpi-access-point",
+    "raspberry",
+    "pi",
     "wifi"
   ],
   "author": "Glenn Vandeuren <vandeurenglenn@gmail.com>",
   "license": "CC-BY-NC-ND-4.0",
   "bugs": {
-    "url": "https://github.com/reeflight/rpi-wifi/issues"
+    "url": "https://github.com/vandeurenglenn/rpi-ap-setup/issues"
   },
-  "homepage": "https://github.com/reeflight/rpi-wifi#readme",
-  "devDependencies": {
-    "del": "^2.2.2",
-    "gulp": "gulpjs/gulp#4.0"
-  },
+  "homepage": "https://github.com/vandeurenglenn/rpi-ap-setup#readme",
   "dependencies": {
-    "chalk": "^1.1.3"
+    "chalk": "^1.1.3",
+    "inquirer": "^3.0.6",
+    "log-update": "^1.0.2"
   }
 }

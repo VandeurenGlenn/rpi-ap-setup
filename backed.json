@@ -1,0 +1,9 @@
+{
+  "src": "src/index.js",
+  "dest": "dist/index.js",
+  "format": "cjs",
+  "sources": [{
+    "src": ["**/templates/*"],
+    "dest": "dist"
+  }]
+}
