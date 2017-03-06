@@ -1,16 +1,5 @@
 'use strict';
 
-var config = {
-  "debug": false,
-  "yesForAll": false,
-  "settings": {
-    "dns": "8.8.8.8 8.8.4.4",
-    "router": "100",
-    "ssid": "RF-001",
-    "pwd": "LoveCook692"
-  }
-};
-
 const chalk = require('chalk');
 var Logger = class {
   _chalk(text, color='white') {
@@ -47,9 +36,7 @@ var Utils = class {
     const cp = spawn('cp', [path, destination]);
 
     cp.stderr.on('data', data => {
-      if (config.debug) {
-        logger$1.warn(data.toString());
-      }
+      logger$1.warn(data.toString());
     });
   }
 
@@ -72,31 +59,6 @@ var Utils = class {
 
   logUpdate(message) {
     logUpdate(logger$1._chalk(message, 'cyan'));
-  }
-
-  online() {
-    return new Promise((resolve, reject) => {
-      const ping = spawn('ping', ['google.com']);
-
-      ping.stdout.on('data', data => {
-        ping.kill();
-      });
-
-      ping.stderr.on('data', data => {
-        ping.kill();
-      });
-
-      ping.on('close', (code) => {
-        if (code === 0 || code === null) {
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-        if (global.debug) {
-          logger$1.warn(`child process exited with code ${code}`);
-        }
-      });
-    });
   }
 };
 
@@ -149,7 +111,7 @@ let logger = new Logger();
 
     promiseTemplates(opts={defaultDNS: true, router: 100, dns: '8.8.8.8 8.8.4.4'}) {
       return new Promise((resolve, reject) => {
-        utils.logUpdate('Seting up templates');
+        utils.logUpdate('Setting up templates');
 
         this.templates = [];
 

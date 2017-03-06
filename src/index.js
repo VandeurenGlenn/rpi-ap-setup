@@ -1,5 +1,4 @@
 'use strict';
-import config from './sources/config.json';
 import Utils from './utils';
 import Logger from './logger.js';
 const {stat, readFile, writeFile, unlink} = require('fs');
