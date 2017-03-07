@@ -70,21 +70,20 @@ let logger = new Logger();
     }
 
     setupAP() {
-      if (this.yesForAll) {
-        this.promiseTemplates().then(() => {
+      this.promptUser(this.yesForAll).then(answers => {
+        this.promiseTemplates(answers).then(() => {
           this.configure();
         });
-      } else {
-        this.promptUser().then(answers => {
-          this.promiseTemplates(answers).then(() => {
-            this.configure();
-          });
-        });
-      }
+      });
     }
 
-    promptUser() {
+    /**
+     * @param {boolean} yesForAll when true, uses the default settings
+     */
+    promptUser(yesForAll) {
       return new Promise(resolve => {
+        if (yesForAll) return resolve();
+
         const questions = [{
           type: 'input',
           name: 'dns',
@@ -129,8 +128,7 @@ let logger = new Logger();
               utils.spawn('update-rc.d', ['udhcpd', 'enable']);
 
               utils.logUpdate('Configuration finished!  Rebooting in 15 seconds');
-
-              utils.spawn('sleep', [10]);
+              
               utils.spawn('reboot');
             });
           });
