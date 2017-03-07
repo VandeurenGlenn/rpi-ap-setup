@@ -17,6 +17,12 @@ let logger = new Logger();
       this.installPackages().then(() => {
         this.setupAP();
       });
+
+      process.on('exit', code => {
+        if (code !== 0) {
+          this.restore();
+        }
+      });
     }
 
     backupConfigs() {
@@ -81,6 +87,20 @@ let logger = new Logger();
           });
         });
       }
+    }
+
+    restoreNetwork() {
+      return new Promise((resolve, reject) => {
+        utils.restore([
+          '/etc/udhcpd.conf',
+          '/etc/default/udhcpd',
+          '/etc/network/interfaces',
+          '/etc/hostapd/hostapd.conf',
+          '/etc/default/hostapd',
+          '/etc/sysctl.conf',
+          '/etc/iptables.ipv4.nat'
+        ]);
+      });
     }
 
     promptUser() {
@@ -230,26 +250,6 @@ let logger = new Logger();
           resolve();
         });
       });
-    }
-
-    readFile(path) {
-      return new Promise((resolve, reject) => {
-        stat(path, (err, stats) => {
-          if (stats === undefined) resolve(String(''));
-          else readFile(path, (err, data) => {
-            resolve(data);
-          });
-        });
-      });
-    }
-
-    addContext(data, context) {
-      return data += context;
-    }
-
-    removeContext(data, context) {
-      // probably replace(context, '')
-      return data -= context;
     }
   }
   return new RpiAPSetup();

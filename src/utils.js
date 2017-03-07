@@ -27,6 +27,13 @@ export default class {
     }
   }
 
+  restore(paths) {
+    for (let path of paths) {
+      this.logUpdate('undoing AP changes, restoring the network');
+      this.cp(`${path}.backup`, path);
+    }
+  }
+
   prompt(questions) {
     return new Promise((resolve, reject) => {
       inquirer.prompt(questions).then(answers => {
