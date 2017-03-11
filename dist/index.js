@@ -47,6 +47,13 @@ var Utils = class {
     }
   }
 
+  restore(paths) {
+    for (let path of paths) {
+      this.logUpdate('undoing AP changes, restoring the network');
+      this.cp(`${path}.backup`, path);
+    }
+  }
+
   prompt(questions) {
     return new Promise((resolve, reject) => {
       inquirer.prompt(questions).then(answers => {
@@ -78,6 +85,12 @@ let logger = new Logger();
       this.installPackages().then(() => {
         this.setupAP();
       });
+
+      process.on('exit', code => {
+        if (code !== 0) {
+          this.restore();
+        }
+      });
     }
 
     backupConfigs() {
@@ -93,15 +106,14 @@ let logger = new Logger();
     }
 
     installPackages() {
-      return new Promise((resolve, reject) => {
-        const install = utils.spawn('sudo', ['apt-get', 'install', 'udhcpd', 'hostapd', '-Y']);
+      return new Promise(resolve => {
+        const install = utils.spawn('apt-get', ['install', 'udhcpd', 'hostapd', '-y']);
         install.on('error', error => {
           logger.error(error);
         });
         install.on('close', (code) => {
           if (code !== 0) {
             logger.error('error installing apt-get packages');
-            reject();
           }
           resolve();
           install.stdin.end();
@@ -109,7 +121,7 @@ let logger = new Logger();
       });
     }
 
-    promiseTemplates(opts={defaultDNS: true, router: 100, dns: '8.8.8.8 8.8.4.4'}) {
+    promiseTemplates(opts={pwd: 'CurlyEyebrows692', ssid: 'RL-001', router: 100, dns: '8.8.8.8 8.8.4.4'}) {
       return new Promise((resolve, reject) => {
         utils.logUpdate('Setting up templates');
 
@@ -142,6 +154,20 @@ let logger = new Logger();
           });
         });
       }
+    }
+
+    restoreNetwork() {
+      return new Promise((resolve, reject) => {
+        utils.restore([
+          '/etc/udhcpd.conf',
+          '/etc/default/udhcpd',
+          '/etc/network/interfaces',
+          '/etc/hostapd/hostapd.conf',
+          '/etc/default/hostapd',
+          '/etc/sysctl.conf',
+          '/etc/iptables.ipv4.nat'
+        ]);
+      });
     }
 
     promptUser() {
@@ -223,7 +249,6 @@ let logger = new Logger();
 
     configureApd() {
       utils.logUpdate('Configuring hostapd');
-      console.log(this.templates['hostapd']);
       return new Promise(resolve => {
         const transforms = [
           this.transformFile('/etc/default/hostapd', this.templates['hostapd']),
@@ -262,6 +287,7 @@ let logger = new Logger();
      * @param {object} args when {address: 0.0.0.0} is given <%= address %> will become 0.0.0.0
      */
     template(path, args) {
+      console.log(args);
       return new Promise((resolve, reject) => {
         const name = this.nameFromPath(path);
         readFile(path, 'utf-8', (err, content) => {
@@ -287,30 +313,10 @@ let logger = new Logger();
      */
     transformFile(path, context) {
       return new Promise((resolve, reject) => {
-        writeFile(path, data, err => {
+        writeFile(path, context, err => {
           resolve();
         });
       });
-    }
-
-    readFile(path) {
-      return new Promise((resolve, reject) => {
-        stat(path, (err, stats) => {
-          if (stats === undefined) resolve(String(''));
-          else readFile(path, (err, data) => {
-            resolve(data);
-          });
-        });
-      });
-    }
-
-    addContext(data, context) {
-      return data += context;
-    }
-
-    removeContext(data, context) {
-      // probably replace(context, '')
-      return data -= context;
     }
   }
   return new RpiAPSetup();
