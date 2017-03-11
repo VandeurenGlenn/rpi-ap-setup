@@ -96,7 +96,6 @@ let logger = new Logger();
     backupConfigs() {
       utils.backup([
         '/etc/udhcpd.conf',
-        '/etc/default/udhcpd',
         '/etc/network/interfaces',
         '/etc/hostapd/hostapd.conf',
         '/etc/default/hostapd',
@@ -129,11 +128,11 @@ let logger = new Logger();
 
         const templates = [
           this.template(__dirname + '/templates/udhcpd.conf', opts),
-          this.template(__dirname + '/templates/hostapd', opts),
+          this.template(__dirname + '/templates/hostapd'),
           this.template(__dirname + '/templates/hostapd.conf', opts),
           this.template(__dirname + '/templates/interfaces', opts),
-          this.template(__dirname + '/templates/sysctl.conf', opts),
-          this.template(__dirname + '/templates/iptables.ipv4.nat', opts)
+          this.template(__dirname + '/templates/sysctl.conf'),
+          this.template(__dirname + '/templates/iptables.ipv4.nat')
         ];
 
         Promise.all(templates).then(() => {
@@ -160,7 +159,6 @@ let logger = new Logger();
       return new Promise((resolve, reject) => {
         utils.restore([
           '/etc/udhcpd.conf',
-          '/etc/default/udhcpd',
           '/etc/network/interfaces',
           '/etc/hostapd/hostapd.conf',
           '/etc/default/hostapd',
@@ -289,7 +287,7 @@ let logger = new Logger();
       return new Promise((resolve, reject) => {
         const name = this.nameFromPath(path);
         readFile(path, 'utf-8', (err, content) => {
-          if (Object.keys(args).length) {
+          if (args && Object.keys(args).length) {
             for (let arg of Object.keys(args)) {
               if (content.includes(`<%= ${arg} %>`)) {
                 let reg = new RegExp('<%= ' + arg + ' %>', ['g']);
