@@ -121,7 +121,7 @@ let logger = new Logger();
       });
     }
 
-    promiseTemplates(opts={pwd: 'CurlyEyebrows692', ssid: 'RL-001', router: 100, dns: '8.8.8.8 8.8.4.4'}) {
+    promiseTemplates(opts={password: 'CurlyEyebrows692', ssid: 'RL-001', router: 100, dns: '8.8.8.8 8.8.4.4'}) {
       return new Promise((resolve, reject) => {
         utils.logUpdate('Setting up templates');
 
@@ -215,9 +215,8 @@ let logger = new Logger();
               utils.spawn('service', ['udhcpd', 'start']);
               utils.spawn('update-rc.d', ['udhcpd', 'enable']);
 
-              utils.logUpdate('Configuration finished!  Rebooting in 15 seconds');
+              utils.logUpdate('Configuration finished!');
 
-              utils.spawn('sleep', [10]);
               utils.spawn('reboot');
             });
           });
@@ -287,11 +286,10 @@ let logger = new Logger();
      * @param {object} args when {address: 0.0.0.0} is given <%= address %> will become 0.0.0.0
      */
     template(path, args) {
-      console.log(args);
       return new Promise((resolve, reject) => {
         const name = this.nameFromPath(path);
         readFile(path, 'utf-8', (err, content) => {
-          if (args.length) {
+          if (Object.keys(args).length) {
             for (let arg of Object.keys(args)) {
               if (content.includes(`<%= ${arg} %>`)) {
                 let reg = new RegExp('<%= ' + arg + ' %>', ['g']);
