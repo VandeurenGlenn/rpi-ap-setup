@@ -1,6 +1,7 @@
 'use strict';
 import Utils from './utils';
 import Logger from './logger.js';
+import {spawn} from 'child_process';
 const {stat, readFile, writeFile, unlink} = require('fs');
 let utils = new Utils();
 let logger = new Logger();
@@ -245,6 +246,22 @@ let logger = new Logger();
           resolve();
         });
       });
+    }
+    restore(){
+      const arr = [
+          '/etc/udhcpd.conf',
+          '/etc/default/udhcpd',
+          '/etc/network/interfaces',
+          '/etc/hostapd/hostapd.conf',
+          '/etc/default/hostapd',
+          '/etc/sysctl.conf',
+          '/etc/iptables.ipv4.nat'
+      ];
+      for (let key of arr) {
+        spawn('sudo', ['rm', '-rf', key]);
+        spawn('sudo', ['cp', key + '.backup', key]);
+      }
+      spawn('sudo', ['reboot']);
     }
   }
   return new RpiAPSetup();
