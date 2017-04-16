@@ -59,11 +59,13 @@ var Utils = class {
 };
 
 const { stat, readFile, writeFile, unlink } = require('fs');
+const { merge } = require('underscore');
 let utils = new Utils();
 let logger = new Logger();
 (() => {
   class RpiAPSetup {
     constructor(auto = false) {
+      this.answers = { password: 'CurlyEyebrows692', ssid: 'RL-001', router: 100, dns: '8.8.8.8 8.8.4.4' };
       const args = process.argv;
       const arg = args[args.length - 1];
       if (arg === '-y' || arg === 'yes' || arg === 'y') {
@@ -77,9 +79,17 @@ let logger = new Logger();
       if (auto) this.init();
     }
     init() {
-      this.backupConfigs();
-      this.installPackages().then(() => {
-        this.setupAP();
+      return new Promise((resolve, reject) => {
+        try {
+          this.backupConfigs();
+          this.installPackages().then(() => {
+            this.setupAP().then(() => {
+              resolve();
+            });
+          });
+        } catch (error) {
+          reject(error);
+        }
       });
     }
     backupConfigs() {
@@ -100,7 +110,7 @@ let logger = new Logger();
         });
       });
     }
-    promiseTemplates(opts = { password: 'CurlyEyebrows692', ssid: 'RL-001', router: 100, dns: '8.8.8.8 8.8.4.4' }) {
+    promiseTemplates(opts) {
       return new Promise((resolve, reject) => {
         utils.logUpdate('Setting up templates');
         this.templates = [];
@@ -111,17 +121,19 @@ let logger = new Logger();
       });
     }
     setupAP() {
-      if (this.yesForAll) {
-        this.promiseTemplates().then(() => {
-          this.configure();
-        });
-      } else {
-        this.promptUser().then(answers => {
-          this.promiseTemplates(answers).then(() => {
-            this.configure();
+      return new Promise((resolve, reject) => {
+        try {
+          this.promptUser().then(answers => {
+            this.promiseTemplates(answers).then(() => {
+              this.configure().then(() => {
+                resolve();
+              });
+            });
           });
-        });
-      }
+        } catch (error) {
+          reject(error);
+        }
+      });
     }
     restoreNetwork() {
       return new Promise((resolve, reject) => {
@@ -130,6 +142,9 @@ let logger = new Logger();
     }
     promptUser() {
       return new Promise(resolve => {
+        if (this.yesForAll) {
+          return resolve(this.answers);
+        }
         const questions = [{
           type: 'input',
           name: 'dns',
@@ -153,27 +168,33 @@ let logger = new Logger();
           default: 100
         }];
         utils.prompt(questions).then(answers => {
-          resolve(answers);
+          resolve(merge(this.answers, answers));
         });
       });
     }
     configure() {
-      this.configureDHCP().then(() => {
-        this.configureInterfaces().then(() => {
-          this.configureApd().then(() => {
-            this.configureNAT().then(() => {
-              utils.spawn('touch', ['/var/lib/misc/udhcpd.leases']);
-              utils.logUpdate('Initialising AP');
-              utils.spawn('service', ['hostapd', 'start']);
-              utils.spawn('update-rc.d', ['hostapd', 'enable']);
-              utils.logUpdate('Initialising DHCP server');
-              utils.spawn('service', ['udhcpd', 'start']);
-              utils.spawn('update-rc.d', ['udhcpd', 'enable']);
-              utils.logUpdate('Configuration finished!');
-              utils.spawn('reboot');
+      return new Promise((resolve, reject) => {
+        try {
+          this.configureDHCP().then(() => {
+            this.configureInterfaces().then(() => {
+              this.configureApd().then(() => {
+                this.configureNAT().then(() => {
+                  utils.spawn('touch', ['/var/lib/misc/udhcpd.leases']);
+                  utils.logUpdate('Initialising AP');
+                  utils.spawn('service', ['hostapd', 'start']);
+                  utils.spawn('update-rc.d', ['hostapd', 'enable']);
+                  utils.logUpdate('Initialising DHCP server');
+                  utils.spawn('service', ['udhcpd', 'start']);
+                  utils.spawn('update-rc.d', ['udhcpd', 'enable']);
+                  utils.logUpdate('Configuration finished!');
+                  resolve(0);
+                });
+              });
             });
           });
-        });
+        } catch (error) {
+          reject(error);
+        }
       });
     }
     configureDHCP() {
