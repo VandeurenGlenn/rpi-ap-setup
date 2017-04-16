@@ -59,7 +59,7 @@ var Utils = class {
 };
 
 const { stat, readFile, writeFile, unlink } = require('fs');
-const { merge } = require('underscore');
+const { extend } = require('underscore');
 let utils = new Utils();
 let logger = new Logger();
 class RpiAPSetup {
@@ -77,7 +77,8 @@ class RpiAPSetup {
     });
     if (auto) this.init();
   }
-  init() {
+  init(yes = false) {
+    this.yesForAll = yes ? yes : this.yesForAll;
     return new Promise((resolve, reject) => {
       try {
         this.backupConfigs();
@@ -167,7 +168,7 @@ class RpiAPSetup {
         default: 100
       }];
       utils.prompt(questions).then(answers => {
-        resolve(merge(this.answers, answers));
+        resolve(extend(this.answers, answers));
       });
     });
   }

@@ -3,7 +3,7 @@ import Utils from './utils';
 import Logger from './logger.js';
 import {spawn} from 'child_process';
 const {stat, readFile, writeFile, unlink} = require('fs');
-const {merge} = require('underscore');
+const {extend} = require('underscore');
 
 let utils = new Utils();
 let logger = new Logger();
@@ -30,7 +30,8 @@ let logger = new Logger();
       if (auto) this.init();
     }
     
-    init() {
+    init(yes = false) {
+      this.yesForAll = yes ? yes : this.yesForAll;
       return new Promise((resolve, reject) => {
         try {
           this.backupConfigs();
@@ -149,7 +150,7 @@ let logger = new Logger();
           default: 100
         }];
         utils.prompt(questions).then(answers => {
-          resolve(merge(this.answers, answers));
+          resolve(extend(this.answers, answers));
         });
       });
     }
