@@ -7,7 +7,7 @@ const {merge} = require('underscore');
 
 let utils = new Utils();
 let logger = new Logger();
-(() => {
+
   class RpiAPSetup {
     /**
      *
@@ -76,9 +76,7 @@ let logger = new Logger();
     promiseTemplates(opts) {
       return new Promise((resolve, reject) => {
         utils.logUpdate('Setting up templates');
-
         this.templates = [];
-
         const templates = [
           this.template(__dirname + '/templates/udhcpd.conf', opts),
           this.template(__dirname + '/templates/hostapd'),
@@ -296,5 +294,4 @@ let logger = new Logger();
       spawn('sudo', ['reboot']);
     }
   }
-  return new RpiAPSetup();
-})();
+  export default new RpiAPSetup();
