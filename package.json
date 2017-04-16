@@ -1,10 +1,9 @@
 {
   "name": "rpi-ap-setup",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "prepublish": "backed -b",
     "serve": "sudo node dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -33,5 +32,16 @@
     "chalk": "^1.1.3",
     "inquirer": "^3.0.6",
     "log-update": "^1.0.2"
+  },
+  "backed": {
+    "bundles": [{
+      "src": "src/index.js",
+      "dest": "dist/index.js",
+      "format": "cjs"
+    }],
+    "sources": [{
+      "src": ["**/templates/*"],
+      "dest": "dist"
+    }]
   }
 }

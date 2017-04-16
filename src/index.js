@@ -7,25 +7,32 @@ let utils = new Utils();
 let logger = new Logger();
 (() => {
   class RpiAPSetup {
-
-    constructor() {
+    /**
+     *
+     *
+     * @param {boolean} auto on true runs init() 'default: false'
+     * */
+    constructor(auto = false) {
       const args = process.argv;
       const arg = args[args.length - 1];
       if (arg === '-y' || arg === 'yes' || arg === 'y') {
         this.yesForAll = true;
       }
-      this.backupConfigs();
-      this.installPackages().then(() => {
-        this.setupAP();
-      });
-
       process.on('exit', code => {
         if (code !== 0) {
           this.restore();
         }
       });
+      if (auto) this.init();
     }
-
+    
+    init() {
+      this.backupConfigs();
+      this.installPackages().then(() => {
+        this.setupAP();
+      });
+    }
+    
     backupConfigs() {
       utils.backup([
         '/etc/udhcpd.conf',
