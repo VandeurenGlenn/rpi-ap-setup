@@ -1,7 +1,5 @@
 'use strict';
 
-var child_process = require('child_process');
-
 const chalk = require('chalk');
 var Logger = class {
   _chalk(text, color = 'white') {
@@ -18,16 +16,17 @@ var Logger = class {
   }
 };
 
-const spawn$1 = require('child_process').spawn;
+const spawn = require('child_process').spawn;
+const { stat: stat$1 } = require('fs');
 const logger$1 = new Logger();
 const inquirer = require('inquirer');
 const logUpdate = require('log-update');
 var Utils = class {
   spawn(command, args) {
-    return spawn$1(command, args);
+    return spawn(command, args);
   }
   cp(path, destination) {
-    const cp = spawn$1('cp', [path, destination]);
+    const cp = spawn('cp', [path, destination]);
     cp.stderr.on('data', data => {
       logger$1.warn(data.toString());
     });
@@ -50,6 +49,14 @@ var Utils = class {
         resolve(answers);
       }).catch(error => {
         reject(error);
+      });
+    });
+  }
+  stat(path) {
+    return new Promise((resolve, reject) => {
+      stat$1(path, (error, stats) => {
+        if (error) return resolve(false);
+        resolve(true);
       });
     });
   }
@@ -254,6 +261,21 @@ class RpiAPSetup {
       });
     });
   }
+  promiseBackupRestore(key) {
+    return new Promise((resolve, reject) => {
+      try {
+        utils.stat(key + '.backup').then(exists => {
+          if (exists) {
+            utils.spawn('sudo', ['rm', '-rf', key]);
+            utils.spawn('sudo', ['cp', key + '.backup', key]);
+            resolve();
+          }
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
   transformFile(path, context) {
     return new Promise((resolve, reject) => {
       writeFile(path, context, err => {
@@ -262,12 +284,26 @@ class RpiAPSetup {
     });
   }
   restore() {
-    const arr = ['/etc/udhcpd.conf', '/etc/default/udhcpd', '/etc/network/interfaces', '/etc/hostapd/hostapd.conf', '/etc/default/hostapd', '/etc/sysctl.conf', '/etc/iptables.ipv4.nat'];
-    for (let key of arr) {
-      child_process.spawn('sudo', ['rm', '-rf', key]);
-      child_process.spawn('sudo', ['cp', key + '.backup', key]);
+    try {
+      utils.logUpdate('Restoring to normal mode');
+      const promises = [];
+      const arr = ['/etc/udhcpd.conf', '/etc/default/udhcpd', '/etc/network/interfaces', '/etc/hostapd/hostapd.conf', '/etc/default/hostapd', '/etc/sysctl.conf', '/etc/iptables.ipv4.nat'];
+      for (let key of arr) {
+        promises.push(this.promiseBackupRemove(key));
+      }
+      Promise.all(promises).then(() => {
+        utils.spawn('touch', ['/var/lib/misc/udhcpd.leases']);
+        utils.spawn('service', ['hostapd', 'stop']);
+        utils.spawn('update-rc.d', ['hostapd', 'disable']);
+        utils.logUpdate('Initialising DHCP server');
+        utils.spawn('service', ['udhcpd', 'stop']);
+        utils.spawn('update-rc.d', ['udhcpd', 'disable']);
+        utils.logUpdate('Restore finished!');
+        utils.spawn('sudo', ['reboot']);
+      });
+    } catch (error) {
+      throw error;
     }
-    child_process.spawn('sudo', ['reboot']);
   }
 }
 var index = new RpiAPSetup();

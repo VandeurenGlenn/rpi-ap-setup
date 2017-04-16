@@ -1,5 +1,6 @@
 'use strict';
 const spawn = require('child_process').spawn;
+const {stat} = require('fs');
 import Logger from './logger.js';
 const logger = new Logger();
 const inquirer = require('inquirer');
@@ -42,6 +43,15 @@ export default class {
         reject(error);
       });
     });
+  }
+  
+  stat(path) {
+    return new Promise((resolve, reject) => {
+      stat(path, (error, stats) => {
+        if (error) return resolve(false);
+        resolve(true)
+      })
+    })
   }
 
   logUpdate(message) {

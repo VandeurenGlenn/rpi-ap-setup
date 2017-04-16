@@ -1,7 +1,6 @@
 'use strict';
 import Utils from './utils';
 import Logger from './logger.js';
-import {spawn} from 'child_process';
 const {stat, readFile, writeFile, unlink} = require('fs');
 const {extend} = require('underscore');
 
@@ -266,6 +265,22 @@ let logger = new Logger();
         });
       });
     }
+    
+    promiseBackupRestore(key) {
+      return new Promise((resolve, reject) => {
+        try {
+          utils.stat(key + '.backup').then(exists => {
+            if (exists) {
+              utils.spawn('sudo', ['rm', '-rf', key]);
+              utils.spawn('sudo', ['cp', key + '.backup', key]);
+              resolve();
+            }
+          });
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
 
     /**
      * @param {string} path file location
@@ -278,21 +293,38 @@ let logger = new Logger();
         });
       });
     }
-    restore(){
-      const arr = [
-          '/etc/udhcpd.conf',
-          '/etc/default/udhcpd',
-          '/etc/network/interfaces',
-          '/etc/hostapd/hostapd.conf',
-          '/etc/default/hostapd',
-          '/etc/sysctl.conf',
-          '/etc/iptables.ipv4.nat'
-      ];
-      for (let key of arr) {
-        spawn('sudo', ['rm', '-rf', key]);
-        spawn('sudo', ['cp', key + '.backup', key]);
+    restore() {
+      try {
+        utils.logUpdate('Restoring to normal mode');
+        const promises = [];
+        const arr = [
+            '/etc/udhcpd.conf',
+            '/etc/default/udhcpd',
+            '/etc/network/interfaces',
+            '/etc/hostapd/hostapd.conf',
+            '/etc/default/hostapd',
+            '/etc/sysctl.conf',
+            '/etc/iptables.ipv4.nat'
+        ];
+        for (let key of arr) {
+          promises.push(this.promiseBackupRemove(key))
+        }
+        
+        Promise.all(promises).then(() => {
+          utils.spawn('touch', ['/var/lib/misc/udhcpd.leases']);
+          utils.spawn('service', ['hostapd', 'stop']);
+          utils.spawn('update-rc.d', ['hostapd', 'disable']);
+    
+          utils.logUpdate('Initialising DHCP server');
+          utils.spawn('service', ['udhcpd', 'stop']);
+          utils.spawn('update-rc.d', ['udhcpd', 'disable']);
+    
+          utils.logUpdate('Restore finished!');
+          utils.spawn('sudo', ['reboot']);
+        })
+      } catch(error) {
+        throw error
       }
-      spawn('sudo', ['reboot']);
     }
   }
   export default new RpiAPSetup();
