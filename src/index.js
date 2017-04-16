@@ -273,8 +273,8 @@ let logger = new Logger();
             if (exists) {
               utils.spawn('sudo', ['rm', '-rf', key]);
               utils.spawn('sudo', ['cp', key + '.backup', key]);
-              resolve();
             }
+            resolve();
           });
         } catch (error) {
           reject(error);

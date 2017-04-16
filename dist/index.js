@@ -268,8 +268,8 @@ class RpiAPSetup {
           if (exists) {
             utils.spawn('sudo', ['rm', '-rf', key]);
             utils.spawn('sudo', ['cp', key + '.backup', key]);
-            resolve();
           }
+          resolve();
         });
       } catch (error) {
         reject(error);
@@ -289,7 +289,7 @@ class RpiAPSetup {
       const promises = [];
       const arr = ['/etc/udhcpd.conf', '/etc/default/udhcpd', '/etc/network/interfaces', '/etc/hostapd/hostapd.conf', '/etc/default/hostapd', '/etc/sysctl.conf', '/etc/iptables.ipv4.nat'];
       for (let key of arr) {
-        promises.push(this.promiseBackupRemove(key));
+        promises.push(this.promiseBackupRestore(key));
       }
       Promise.all(promises).then(() => {
         utils.spawn('touch', ['/var/lib/misc/udhcpd.leases']);
