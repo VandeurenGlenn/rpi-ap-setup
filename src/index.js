@@ -307,7 +307,7 @@ let logger = new Logger();
             '/etc/iptables.ipv4.nat'
         ];
         for (let key of arr) {
-          promises.push(this.promiseBackupRemove(key))
+          promises.push(this.promiseBackupRestore(key))
         }
         
         Promise.all(promises).then(() => {
