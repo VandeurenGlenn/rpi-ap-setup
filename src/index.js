@@ -232,6 +232,24 @@ let logger = new Logger();
         });
       });
     }
+    
+    shutdown() {
+      return new Promise(resolve => {
+        utils.logUpdate('Shutting down AP');
+        utils.spawn('service', ['hostapd', 'stop']);
+        utils.spawn('update-rc.d', ['hostapd', 'disable']);
+        
+        utils.logUpdate('Shutting down DHCP');
+        utils.spawn('service', ['udhcpd', 'start']);
+        utils.spawn('update-rc.d', ['udhcpd', 'enable']);
+        
+        utils.logUpdate('Shutdown!');
+        
+        Promise.all(transforms).then(() => {
+          resolve();
+        });
+      });
+    }
 
     /**
      * @return {string} someFilename
