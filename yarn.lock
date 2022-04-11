@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@snyk/protect@^1.900.0":
+  version "1.900.0"
+  resolved "https://registry.yarnpkg.com/@snyk/protect/-/protect-1.900.0.tgz#8326e163459e223f4601ec0815a94f577520c5b1"
+  integrity sha512-eeGZJu3ucvTrUTszrWXzT+yIsFqoOo4ywv4JRmJgdKkOQ3Udmy3moY1k9Sfnf86p+cGBy5WBUjDM8+9I8L0IpQ==
+
 ansi-escapes@^1.0.0, ansi-escapes@^1.1.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/ansi-escapes/-/ansi-escapes-1.4.0.tgz#d3a8a83b319aa67793662b13e761c7911422306e"
